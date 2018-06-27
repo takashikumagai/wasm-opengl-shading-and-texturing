@@ -16,18 +16,21 @@ static const char *vertex_shader_source =
     "#version 300 es\n"\
     "layout(location=0) in vec4 pos;\n"\
     "layout(location=1) in vec3 n;\n"\
+    "layout(location=2) in vec2 t;\n"\
     "out vec3 normal;\n"\
+    "out vec2 tex;\n"\
     "uniform mat4 W;"\
     "uniform mat4 V;"\
     "uniform mat4 P;"\
     "uniform mat4 Rx;"\
     "uniform mat4 Ry;"\
-    "void main() {gl_Position = P*V*W*Ry*Rx*pos;normal=mat3(W*Ry*Rx)*n;}";
+    "void main() {gl_Position = P*V*W*Ry*Rx*pos;normal=mat3(W*Ry*Rx)*n;tex=t;}";
 
 static const char *fragment_shader_source =
     "#version 300 es\n"\
     "precision mediump float;\n"\
     "in vec3 normal;\n"\
+    "in vec2 tex;\n"\
     "layout(location=0) out vec4 fc;\n"\
     "uniform vec3 dir_to_light;\n"\
     "void main() {"\
@@ -109,6 +112,39 @@ static const GLfloat cube_normals[] = {
      0.0f, 0.0f,-1.0f
 };
 
+static const GLfloat cube_texture_coords[] = {
+    // top
+     0.0f, 0.0f,
+     0.0f, 1.0f,
+     1.0f, 1.0f,
+     1.0f, 0.0f,
+
+     0.0f, 0.0f,
+     0.0f, 1.0f,
+     1.0f, 1.0f,
+     1.0f, 0.0f,
+
+     0.0f, 0.0f,
+     0.0f, 1.0f,
+     1.0f, 1.0f,
+     1.0f, 0.0f,
+
+     0.0f, 0.0f,
+     0.0f, 1.0f,
+     1.0f, 1.0f,
+     1.0f, 0.0f,
+
+     0.0f, 0.0f,
+     0.0f, 1.0f,
+     1.0f, 1.0f,
+     1.0f, 0.0f,
+
+     0.0f, 0.0f,
+     0.0f, 1.0f,
+     1.0f, 1.0f,
+     1.0f, 0.0f
+};
+
 static const GLuint cube_indices[] = {
     0,1,2, 0,2,3,
     4,5,6, 4,6,7,
@@ -120,6 +156,7 @@ static const GLuint cube_indices[] = {
 
 static GLuint vbo = 0;
 static GLuint nbo = 0;
+static GLuint tcbo = 0;
 static GLuint ibo = 0;
 
 static int CheckShaderStatus(GLuint shader) {
@@ -260,6 +297,10 @@ int MyApp::Init() {
     glBindBuffer(GL_ARRAY_BUFFER, nbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(cube_normals), cube_normals, GL_STATIC_DRAW);
 
+    glGenBuffers( 1, &tcbo );
+    glBindBuffer(GL_ARRAY_BUFFER, tcbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cube_texture_coords), cube_texture_coords, GL_STATIC_DRAW);
+
     glGenBuffers( 1, &ibo );
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(cube_indices), cube_indices, GL_STATIC_DRAW);
@@ -328,6 +369,7 @@ void MyApp::Render() {
 
     GLuint vertex_attrib_index = 0;
     GLuint normal_attrib_index = 1;
+    GLuint texture_coord_attrib_index = 2;
 
     GLboolean normalized = GL_FALSE;
 
@@ -345,6 +387,10 @@ void MyApp::Render() {
     glEnableVertexAttribArray(normal_attrib_index);
     glBindBuffer(GL_ARRAY_BUFFER, nbo);
     glVertexAttribPointer(normal_attrib_index, 3, GL_FLOAT, normalized, sizeof(float)*3, 0);
+
+    glEnableVertexAttribArray(texture_coord_attrib_index);
+    glBindBuffer(GL_ARRAY_BUFFER, tcbo);
+    glVertexAttribPointer(normal_attrib_index, 2, GL_FLOAT, normalized, sizeof(float)*2, 0);
 
     GLsizei num_elements_to_render = 36;
     //glDrawElements( GL_TRIANGLES, num_elements_to_render, GL_UNSIGNED_INT, cube_indices );
