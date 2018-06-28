@@ -33,12 +33,13 @@ static const char *fragment_shader_source =
     "in vec2 tex;\n"\
     "layout(location=0) out vec4 fc;\n"\
     "uniform vec3 dir_to_light;\n"\
+    "uniform sampler2D sampler2d;\n"\
     "void main() {"\
         "vec3 n = normalize(normal);"\
         "float d = dot(dir_to_light,n);"\
         "float f = (d+1.0)*0.5;"\
         "vec3 c = f*vec3(1.0,1.0,1.0) + (1.0-f)*vec3(0.2,0.2,0.2);"\
-        "fc = vec4(c.x,c.y,c.z,1.0);"\
+        "fc = vec4(c.x,c.y,c.z,1.0)*texture(sampler2d,tex);"\
     "}";
 
 static const GLfloat cube_vertices[] = {
@@ -159,6 +160,8 @@ static GLuint nbo = 0;
 static GLuint tcbo = 0;
 static GLuint ibo = 0;
 
+static GLuint texture = 0;
+
 static int CheckShaderStatus(GLuint shader) {
 
     GLint is_compiled = 0;
@@ -203,6 +206,30 @@ static int CheckProgramStatus(GLuint program) {
 
         return -1;
     }
+}
+
+int MyApp::LoadImageFromFile(const char *image_pathname, void *&data, unsigned int &w, unsigned int &h) {
+
+    return 0;
+}
+
+int MyApp::CreateTexture() {
+
+    glGenTextures( 1, &texture );
+
+    glBindTexture( GL_TEXTURE_2D, texture );
+
+    void *data = nullptr;
+    unsigned int w=0,h=0;
+    int ret = LoadImageFromFile("",data,w,h);
+
+    if(ret != 0) {
+        return ret;
+    }
+
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data );
+
+    return 0;
 }
 
 int MyApp::Init() {
@@ -391,6 +418,9 @@ void MyApp::Render() {
     glEnableVertexAttribArray(texture_coord_attrib_index);
     glBindBuffer(GL_ARRAY_BUFFER, tcbo);
     glVertexAttribPointer(normal_attrib_index, 2, GL_FLOAT, normalized, sizeof(float)*2, 0);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture( GL_TEXTURE_2D, texture );
 
     GLsizei num_elements_to_render = 36;
     //glDrawElements( GL_TRIANGLES, num_elements_to_render, GL_UNSIGNED_INT, cube_indices );
