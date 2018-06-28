@@ -417,7 +417,7 @@ void MyApp::Render() {
 
     glEnableVertexAttribArray(texture_coord_attrib_index);
     glBindBuffer(GL_ARRAY_BUFFER, tcbo);
-    glVertexAttribPointer(normal_attrib_index, 2, GL_FLOAT, normalized, sizeof(float)*2, 0);
+    glVertexAttribPointer(texture_coord_attrib_index, 2, GL_FLOAT, normalized, sizeof(float)*2, 0);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture( GL_TEXTURE_2D, texture );
