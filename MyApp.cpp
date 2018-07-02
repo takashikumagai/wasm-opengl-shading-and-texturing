@@ -33,13 +33,13 @@ static const char *fragment_shader_source =
     "in vec2 tex;\n"\
     "layout(location=0) out vec4 fc;\n"\
     "uniform vec3 dir_to_light;\n"\
-    "uniform sampler2D sampler2d;\n"\
+    "uniform sampler2D s2d;\n"\
     "void main() {"\
         "vec3 n = normalize(normal);"\
         "float d = dot(dir_to_light,n);"\
         "float f = (d+1.0)*0.5;"\
         "vec3 c = f*vec3(1.0,1.0,1.0) + (1.0-f)*vec3(0.2,0.2,0.2);"\
-        "fc = vec4(c.x,c.y,c.z,1.0)*texture(sampler2d,tex);"\
+        "fc = vec4(c.x,c.y,c.z,1.0) * texture(s2d,tex);"\
     "}";
 
 static const GLfloat cube_vertices[] = {
@@ -208,8 +208,18 @@ static int CheckProgramStatus(GLuint program) {
     }
 }
 
-int MyApp::LoadImageFromFile(const char *image_pathname, void *&data, unsigned int &w, unsigned int &h) {
+int MyApp::CreateSampleTextureData(int width, int height, std::vector<unsigned char>& data) {
 
+    data.resize( width * height * 4, 255 );
+    for(int y=0; y<height; y++) {
+        for(int x=0; x<width; x++) {
+            int s = (width*y+x)*4;
+            data[s]   = x % 256;
+            data[s+1] = y % 256;
+            data[s+2] = 255;
+            data[s+3] = 255;
+        }
+    }
     return 0;
 }
 
@@ -219,15 +229,16 @@ int MyApp::CreateTexture() {
 
     glBindTexture( GL_TEXTURE_2D, texture );
 
-    void *data = nullptr;
-    unsigned int w=0,h=0;
-    int ret = LoadImageFromFile("",data,w,h);
+    std::vector<unsigned char> data;
+    int w=256,h=256;
+    int ret = CreateSampleTextureData(w,h,data);
 
     if(ret != 0) {
         return ret;
     }
 
-    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, data );
+    console_log("updating texture");
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, &data[0] );
 
     return 0;
 }
@@ -336,6 +347,8 @@ int MyApp::Init() {
 
     glEnable(GL_DEPTH_TEST);
 
+    CreateTexture();
+
     this->start_time = std::chrono::system_clock::now();
 
     return 0;
@@ -420,7 +433,15 @@ void MyApp::Render() {
     glVertexAttribPointer(texture_coord_attrib_index, 2, GL_FLOAT, normalized, sizeof(float)*2, 0);
 
     glActiveTexture(GL_TEXTURE0);
+
+    //glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+
     glBindTexture( GL_TEXTURE_2D, texture );
+    glUniform1i(glGetUniformLocation(program,"s2d"),0);
 
     GLsizei num_elements_to_render = 36;
     //glDrawElements( GL_TRIANGLES, num_elements_to_render, GL_UNSIGNED_INT, cube_indices );

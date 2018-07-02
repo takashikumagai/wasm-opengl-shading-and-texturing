@@ -9,7 +9,7 @@ class MyApp : public WasmApp {
 
     std::chrono::time_point<std::chrono::system_clock> start_time;
 
-    int LoadImageFromFile(const char *image_pathname, void *&data, unsigned int &w, unsigned int &h);
+    int CreateSampleTextureData(int width, int height, std::vector<unsigned char>& data);
 
     int CreateTexture();
 
